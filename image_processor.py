@@ -6,20 +6,14 @@ class ImageProcessor:
     '''
     A class to process images and create differences between them.
     '''
-
     def __init__(self, original_image):  # Receives the original image, stores modifed image, differences and alterations as None
         self.original_image = original_image
         self.modified_image = None
         self.differences = None
         self.alterations = None
 
-
-
-
     def clone(self):  # Clones the original image and stores it in modified_image
         self.modified_image = self.original_image.copy()  
-
-
 
     def generate_regions(self):
         height, width, _ = self.original_image.shape  # Get the dimensions of the original image
@@ -32,7 +26,8 @@ class ImageProcessor:
                 x = np.random.randint(0, width - region_w)  # Random x coordinate for the region
                 y = np.random.randint(0, height - region_h)  # Random y coordinate for the region
 
-                if not any(x < rx + rw and rx < x + region_w and y < ry + rh and ry < y + region_h for rx, ry, rw, rh in regions): # Check if the generated region overlaps with any existing regions
+                # Check if the generated region overlaps with any existing regions
+                if not any(x < rx + rw and rx < x + region_w and y < ry + rh and ry < y + region_h for rx, ry, rw, rh in regions): 
                     regions.append((x, y, region_w, region_h))  # If not, add it to the list of regions
                     break
 
