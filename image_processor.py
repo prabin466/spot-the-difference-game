@@ -1,6 +1,6 @@
 import cv2
 import numpy as np
-
+import random
 
 class ImageProcessor:
     """
@@ -11,6 +11,7 @@ class ImageProcessor:
     def __init__(self, original_image):
         """
         Initializes the ImageProcessor with the original image.
+        Lazily initializes modified_image, differences, and alterations to None. These will be populated as needed.
         """
         self.original_image = original_image
         self.modified_image = None
@@ -35,7 +36,9 @@ class ImageProcessor:
         regions = []
 
         for _ in range(count):
-            while True:  
+            attempts = 0
+            while attempts < 100:  # Guard against infinite loops in case of high density
+                attempts += 1
                 region_w = np.random.randint(30, 50)
                 region_h = np.random.randint(30, 50)  
                 x = np.random.randint(0, width - region_w)
@@ -53,7 +56,41 @@ class ImageProcessor:
 
         self.differences = regions
         return regions
+        
     
+    def apply_alterations(self):
+        """
+        Applies a random alteration to each region defined in self.differences.
+        Possible alterations include hue shift, saturation shift, brightness shift, blur, and noise addition.
+        Populates self.alterations with the type of alteration applied to each region for later reference.
+        Modifies self.modified_image in place with the applied alterations.
+        """
+        if self.modified_image is None:
+            raise ValueError("Modified image not initialized. Call clone() before applying alterations.")
+        
+        if self.differences is None:
+            raise ValueError("Differences not generated. Call generate_regions() before applying alterations.")
+        
+        alteration_func = [
+            self._apply_hue_shift,
+            self._apply_saturation_shift,
+            self._apply_brightness_shift,
+            self._apply_blur,
+            self._apply_noise
+        ]
+        
+        random.shuffle(alteration_func)
+        self.alterations =[]
+        for region, func in zip(self.differences, alteration_func):
+            x, y, w, h = region
+            patch = self.modified_image[y:y+h, x:x+w]
+            altered_patch = func(patch)
+            self.alterations.append((region, func.__name__))
+            self.modified_image[y:y+h, x:x+w] = altered_patch
+
+
+
+    #  --- Alteration utility methods ---
 
     @staticmethod
     def _shift_hsv_channel(patch, channel, min_shift, max_shift, wrap = None):
@@ -86,7 +123,7 @@ class ImageProcessor:
     
     @staticmethod
     def _apply_brightness_shift(patch):
-        return ImageProcessor._shift_hsv_channel(patch, channel=2, min_shift=30, max_shift=60, wrap=255)
+        return ImageProcessor._shift_hsv_channel(patch, channel=2, min_shift=20, max_shift=40, wrap=255)
 
 
     @staticmethod
