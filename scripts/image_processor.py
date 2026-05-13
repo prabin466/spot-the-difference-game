@@ -79,10 +79,10 @@ class ImageProcessor:
             self._apply_noise
         ]
         
-        random.shuffle(alteration_func)
         self.alterations =[]
-        for region, func in zip(self.differences, alteration_func):
+        for region in self.differences:
             x, y, w, h = region
+            func = random.choice(alteration_func)
             patch = self.modified_image[y:y+h, x:x+w]
             altered_patch = func(patch)
             self.alterations.append((region, func.__name__))
